@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+  //  provider = "sqlite"
+  //  url      = env("DATABASE_URL")
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  username String @unique
+  email String? @unique
+  password String?
+  phone String? @unique
+  github_id String? @unique
+  avatar String? 
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  tokens SMSToken[]
+  products    Product[]  
+  tweets Tweet[]
+  tweetlikes TweetLike[]
+  tweetcomment TweetComment[]
+  posts Post[]
+  postlikes PostLike[]
+  postcomment PostComment[]
+  chat_rooms ChatRoom[]
+  messages   Message[]
+  livestream LiveStream[]
+}
+
+model SMSToken {
+  id Int @id @default(autoincrement())
+  token String @unique
+  phone String @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int  
+}
+
+model Product {
+  id Int @id @default(autoincrement())
+  title String
+  price Float
+  photo String
+  description String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+}
+
+model Tweet {
+  id Int @id @default(autoincrement())
+  tweet String @unique
+  description String?
+  views Int @default(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  tweetlikes TweetLike[]
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int 
+  tweetcomment TweetComment[] 
+}
+
+model TweetLike {
+  @@id(name: "id", [userId, tweetId])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int  
+  Tweet Tweet @relation(fields: [tweetId], references: [id], onDelete: Cascade)
+  tweetId Int
+}
+
+model TweetComment {
+  id Int @id @default(autoincrement())
+  payload String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tweet Tweet @relation(fields: [tweetId], references: [id], onDelete: Cascade)
+  userId Int
+  tweetId Int  
+}
+
+model Post {
+  id Int @id @default(autoincrement())
+  title String
+  description String?
+  views Int @default(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+  postcomment PostComment[]
+  postlikes PostLike[]
+}
+
+model PostLike {
+  @@id(name: "id", [userId, postId])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int  
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId Int
+}
+
+model PostComment {
+  id Int @id @default(autoincrement())
+  payload String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId Int
+  postId Int  
+}
+
+model ChatRoom {
+  id    String @id @default(cuid())
+  users User[]
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  messages   Message[]
+}
+
+model Message {
+  id      Int    @id @default(autoincrement())
+  payload String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  room       ChatRoom @relation(fields: [chatRoomId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+  chatRoomId String
+  userId     Int
+}
+
+model LiveStream {
+  id      Int    @id @default(autoincrement())
+  title String
+  stream_key String
+  stream_id String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+}
